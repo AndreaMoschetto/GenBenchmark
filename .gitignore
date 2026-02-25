@@ -1,0 +1,12 @@
+# python
+__pycache__/
+
+# models and resultss
+results/
+models_cache/
+
+# data
+*.faiss
+*.pkl
+*.json
+*.csv
