@@ -1,0 +1,94 @@
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import gc
+
+
+class LocalGenerator:
+    def __init__(self, model_path: str):
+        """
+        Inizializza il modello caricandolo fisicamente nella VRAM/RAM.
+        model_path deve puntare alla cartella locale (es. './local_models/llama-3.2-1b')
+        """
+        # Rilevamento automatico dell'hardware
+        if torch.cuda.is_available():
+            self.device = "cuda"
+        elif torch.backends.mps.is_available():
+            self.device = "mps"  # Per il tuo Mac M1
+        else:
+            self.device = "cpu"
+
+        print(f"Caricamento modello da {model_path} su device: {self.device}...")
+
+        # Carichiamo il tokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            local_files_only=True
+        )
+
+        # Carichiamo il modello in float16 per risparmiare memoria (ottimo per M1 e CUDA)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_path,
+            device_map=self.device,
+            dtype=torch.float16 if self.device != "cpu" else torch.float32,
+            local_files_only=True
+        )
+
+        print("✅ Generatore inizializzato.")
+
+    def generate_answer(self, query: str, context: str, max_new_tokens: int = 150) -> str:
+        """
+        Genera una risposta usando il formato prompt standard del RAG.
+        """
+        # Creiamo un prompt chiaro e diretto che vincoli il modello al contesto
+        system_prompt = "You are an expert assistant. Answer the question strictly based on the provided context. If the context does not contain the answer, say 'I don't know'."
+        user_prompt = f"CONTEXT:\n{context}\nQUESTION:\n{query}"
+
+        # Usiamo il chat_template se il modello lo supporta (consigliato per modelli Instruct)
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+
+        try:
+            # Applichiamo il template conversazionale del modello (Llama, Phi, ecc. ne hanno di specifici)
+            prompt = self.tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True
+            )
+        except Exception:
+            # Fallback se il modello non ha un chat_template definito
+            prompt = f"{system_prompt}\n\n{user_prompt}\n\nANSWER:\n"
+
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+
+        # Generazione
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                temperature=0.1,  # Bassa per limitare le allucinazioni nel RAG
+                do_sample=True,
+                pad_token_id=self.tokenizer.eos_token_id
+            )
+
+        # Decodifica estraendo solo la parte nuova generata
+        input_length = inputs.input_ids.shape[1]
+        generated_tokens = outputs[0][input_length:]
+        answer = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+
+        return answer.strip()
+
+    def cleanup(self):
+        """
+        Libera la memoria in modo aggressivo. Fondamentale quando
+        fai i test con più modelli in sequenza sullo stesso Mac.
+        """
+        print("Liberazione memoria VRAM/RAM...")
+        del self.model
+        del self.tokenizer
+        gc.collect()
+        if self.device == "cuda":
+            torch.cuda.empty_cache()
+        elif self.device == "mps":
+            torch.mps.empty_cache()
