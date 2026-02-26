@@ -22,7 +22,7 @@ class FaissRetriever:
         with open(meta_path, "rb") as f:
             self.passages_text = pickle.load(f)
 
-        print("✅ Retriever inizializzato.")
+        print("Retriever inizializzato.")
 
     def get_context(self, query: str) -> str:
         # Convertiamo la query in vettore

@@ -18,7 +18,7 @@ def download_models(models_to_download, hf_token):
 
     for nome_modello in models_to_download:
         if nome_modello not in MODELS_ZOO:
-            print(f"⚠️ Modello '{nome_modello}' non trovato nel dizionario. Salto.")
+            print(f"Modello '{nome_modello}' non trovato nel dizionario. Salto.")
             continue
 
         repo_id = MODELS_ZOO[nome_modello]
@@ -26,10 +26,10 @@ def download_models(models_to_download, hf_token):
 
         # Controllo se esiste già ed è popolato
         if os.path.exists(save_path) and len(os.listdir(save_path)) > 0:
-            print(f"⏭️ Il modello {nome_modello} è già presente in {save_path}. Download saltato.")
+            print(f"Il modello {nome_modello} è già presente in {save_path}. Download saltato.")
             continue
 
-        print(f"\n⬇️ Inizio download di {nome_modello} ({repo_id})...")
+        print(f"\nInizio download di {nome_modello} ({repo_id})...")
         try:
             # Scarichiamo il modello ignorando i formati pesanti non necessari a PyTorch
             snapshot_download(
@@ -39,9 +39,9 @@ def download_models(models_to_download, hf_token):
                 token=hf_token,
                 ignore_patterns=["*.msgpack", "*.h5", "coreml/*", "original/*"]
             )
-            print(f"✅ Download completato: {save_path}")
+            print(f"Download completato: {save_path}")
         except Exception as e:
-            print(f"❌ Errore scaricando {nome_modello}: {e}")
+            print(f"Errore scaricando {nome_modello}: {e}")
 
 
 if __name__ == "__main__":

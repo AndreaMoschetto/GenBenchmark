@@ -101,16 +101,16 @@ def evaluate_models(results_dir=RESULTS_DIR, output_csv="benchmark_summary.csv")
     summary_data = []
 
     if not os.path.exists(results_dir):
-        print(f"❌ Errore: La cartella '{results_dir}' non esiste. Assicurati di aver generato i file.")
+        print(f"Errore: La cartella '{results_dir}' non esiste. Assicurati di aver generato i file.")
         return
 
     json_files = [f for f in os.listdir(results_dir) if f.startswith("results_") and f.endswith(".json")]
 
     if not json_files:
-        print(f"⚠️ Nessun file di risultati trovato nella cartella '{results_dir}'. Esegui prima benchmark.py.")
+        print(f"Nessun file di risultati trovato nella cartella '{results_dir}'. Esegui prima benchmark.py.")
         return
 
-    print("\n🔍 Calcolo del MRR globale (Metrica del Retriever)...")
+    print("\nCalcolo del MRR globale (Metrica del Retriever)...")
     global_mrr = 0.0
     with open(os.path.join(results_dir, json_files[0]), "r", encoding="utf-8") as f:
         first_model_data = json.load(f)
@@ -122,11 +122,11 @@ def evaluate_models(results_dir=RESULTS_DIR, output_csv="benchmark_summary.csv")
         mrr_scores.append(mrr_score)
 
     global_mrr = np.mean(mrr_scores)
-    print(f"🎯 MRR Globale (costante per tutti i modelli): {global_mrr:.4f}")
+    print(f"MRR Globale (costante per tutti i modelli): {global_mrr:.4f}")
 
     for file_name in json_files:
         model_name = file_name.replace("results_", "").replace(".json", "")
-        print(f"\n📊 Valutazione in corso per: {model_name}...")
+        print(f"\nValutazione in corso per: {model_name}...")
 
         with open(os.path.join(results_dir, file_name), "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -172,7 +172,7 @@ def evaluate_models(results_dir=RESULTS_DIR, output_csv="benchmark_summary.csv")
     df = pd.DataFrame(summary_data)
     df.to_csv(output_csv, index=False)
 
-    print(f"\n🎉 Valutazione completata! Risultati riassuntivi salvati in {output_csv}")
+    print(f"\nValutazione completata! Risultati riassuntivi salvati in {output_csv}")
     print("\n--- RISULTATI FINALI ---")
     print(df.to_markdown(index=False))
 

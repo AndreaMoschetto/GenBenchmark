@@ -24,11 +24,11 @@ def run_benchmark(models_to_test, limit=None):
         model_path = os.path.join(MODELS_DIR, model_name)
 
         if not os.path.exists(model_path) or not os.listdir(model_path):
-            print(f"\n⚠️ Modello {model_name} non trovato in {model_path}. Salto.")
+            print(f"\nModello {model_name} non trovato in {model_path}. Salto.")
             continue
 
         print("\n========================================")
-        print(f"🚀 Avvio Benchmark per: {model_name}")
+        print(f"Avvio Benchmark per: {model_name}")
         print("========================================")
 
         generator = LocalGenerator(model_path=model_path)
@@ -71,7 +71,7 @@ def run_benchmark(models_to_test, limit=None):
         with open(os.path.join(RESULTS_DIR, output_file), "w", encoding="utf-8") as f:
             json.dump(results, f, indent=4, ensure_ascii=False)
 
-        print(f"✅ Benchmark completato per {model_name}. Risultati salvati in {output_file}")
+        print(f"Benchmark completato per {model_name}. Risultati salvati in {output_file}")
 
 
 if __name__ == "__main__":

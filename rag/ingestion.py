@@ -47,7 +47,7 @@ def ingest_to_faiss(json_path=DATASET_PATH,
     with open(meta_out, "wb") as f:
         pickle.dump(passages_list, f)
 
-    print("✅ Ingestion FAISS completata!")
+    print("Ingestion FAISS completata!")
 
 
 if __name__ == "__main__":

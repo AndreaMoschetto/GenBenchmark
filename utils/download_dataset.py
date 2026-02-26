@@ -7,7 +7,7 @@ from constants import DATA_PATH, DATASET_PATH
 
 def extract_well_formed_subset(output_file=DATASET_PATH):
     if os.path.exists(output_file):
-        print(f"⚠️ Il file {output_file} esiste già. Se vuoi rigenerarlo, cancellalo manualmente e riesegui questo script.")
+        print(f"Il file {output_file} esiste già. Se vuoi rigenerarlo, cancellalo manualmente e riesegui questo script.")
         return
     print("Connessione a Hugging Face per MS MARCO v2.1 (Streaming mode)...")
 
