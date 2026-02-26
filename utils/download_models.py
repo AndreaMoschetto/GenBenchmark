@@ -2,7 +2,7 @@ import os
 import argparse
 from huggingface_hub import snapshot_download
 
-# Dizionario dei modelli: Nome "facile" -> ID del repository Hugging Face
+# Dizionario dei modelli: Nome -> ID del repository Hugging Face
 MODELS_ZOO = {
     "llama-3.2-1b": "meta-llama/Llama-3.2-1B-Instruct",
     "phi-3-mini": "microsoft/Phi-3-mini-4k-instruct",
@@ -24,7 +24,7 @@ def download_models(models_to_download, hf_token):
         repo_id = MODELS_ZOO[nome_modello]
         save_path = os.path.join(TARGET_DIR, nome_modello)
 
-        # Controllo se esiste già ed è popolato (evita di riscaricare)
+        # Controllo se esiste già ed è popolato
         if os.path.exists(save_path) and len(os.listdir(save_path)) > 0:
             print(f"⏭️ Il modello {nome_modello} è già presente in {save_path}. Download saltato.")
             continue
@@ -61,6 +61,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Se l'utente digita "all", scarichiamo tutti i modelli del dizionario
     models_list = list(MODELS_ZOO.keys()) if "all" in args.models else args.models
     download_models(models_list, args.token)

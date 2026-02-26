@@ -32,7 +32,7 @@ def extract_well_formed_subset(output_file=DATASET_PATH):
                 "passages": record.get("passages"),  # Contiene testi e is_selected
                 "answers": record.get("answers"),
                 "well_formed_answer": wf_answers[0],  # Prendiamo la prima
-                "query_type": record.get("query_type")  # Utile per analisi per categoria
+                "query_type": record.get("query_type")
             }
             subset.append(clean_record)
 

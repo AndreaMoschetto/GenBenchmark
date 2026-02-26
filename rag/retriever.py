@@ -25,22 +25,22 @@ class FaissRetriever:
         print("✅ Retriever inizializzato.")
 
     def get_context(self, query: str) -> str:
-        # 1. Convertiamo la query in vettore
+        # Convertiamo la query in vettore
         query_vector = self.model.encode([query]).astype("float32")
 
-        # 2. Cerchiamo i k vettori più vicini in FAISS
+        # Cerchiamo i k vettori più vicini in FAISS
         # distances conterrà le distanze L2, indices gli ID numerici
         distances, indices = self.index.search(query_vector, self.k)
 
-        # 3. Recuperiamo i testi usando gli ID
+        # Recuperiamo i testi usando gli ID
         retrieved_docs = [self.passages_text[idx] for idx in indices[0] if idx != -1]
 
-        # 4. Formattiamo come stringa unica per il prompt
+        # Formattiamo come stringa unica per il prompt
         formatted_context = "\n\n---\n\n".join(retrieved_docs)
         return formatted_context
 
 
-# --- Piccolo blocco di test se esegui il file direttamente ---
+# Piccolo blocco di test del retriever
 if __name__ == "__main__":
     retriever = FaissRetriever(num_docs=3)
     test_query = "how to become a notary oklahoma"

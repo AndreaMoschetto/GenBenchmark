@@ -18,12 +18,11 @@ def run_benchmark(models_to_test, limit=None):
         print(f"Esecuzione limitata a {limit} domande per test.")
 
     print("\nInizializzazione del Retriever (FAISS)...")
-    retriever = FaissRetriever(num_docs=5)  # Recuperiamo i top 7 contesti
+    retriever = FaissRetriever(num_docs=5)  # Recuperiamo i top 5 contesti
 
     for model_name in models_to_test:
         model_path = os.path.join(MODELS_DIR, model_name)
 
-        # Saltiamo se il modello non è stato scaricato
         if not os.path.exists(model_path) or not os.listdir(model_path):
             print(f"\n⚠️ Modello {model_name} non trovato in {model_path}. Salto.")
             continue
@@ -32,12 +31,10 @@ def run_benchmark(models_to_test, limit=None):
         print(f"🚀 Avvio Benchmark per: {model_name}")
         print("========================================")
 
-        # Inizializziamo il generatore caricandolo in RAM/VRAM
         generator = LocalGenerator(model_path=model_path)
 
         results = []
 
-        # Create results folder if it doesn't exist
         os.makedirs(RESULTS_DIR, exist_ok=True)
 
         # Iteriamo sulle domande con una barra di progresso
@@ -45,16 +42,16 @@ def run_benchmark(models_to_test, limit=None):
             query = row["query"]
             ground_truth = row.get("well_formed_answer", "")
 
-            # 1. Recupero del contesto
+            # Recupero del contesto
             context = retriever.get_context(query)
 
             # Splittiamo il contesto unico in una lista di testi per agevolare l'MRR
             retrieved_texts = context.split("\n\n---\n\n") if context else []
 
-            # 2. Generazione della risposta
+            # Generazione della risposta
             generated_answer = generator.generate_answer(query, context)
 
-            # 3. Salvataggio del record strutturato
+            # Salvataggio del record
             results.append({
                 "query_id": row.get("query_id"),
                 "query": query,
@@ -70,7 +67,6 @@ def run_benchmark(models_to_test, limit=None):
         # Liberiamo la memoria prima di passare al modello successivo
         generator.cleanup()
 
-        # Salviamo i risultati in un file JSON dedicato a questo modello
         output_file = f"results_{model_name}.json"
         with open(os.path.join(RESULTS_DIR, output_file), "w", encoding="utf-8") as f:
             json.dump(results, f, indent=4, ensure_ascii=False)

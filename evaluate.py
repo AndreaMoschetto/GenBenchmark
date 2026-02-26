@@ -11,7 +11,6 @@ import warnings
 from tqdm import tqdm
 from constants import RESULTS_DIR
 
-# Ignoriamo i warning di NLTK se le frasi sono troppo corte per i 4-grammi
 warnings.filterwarnings("ignore")
 
 

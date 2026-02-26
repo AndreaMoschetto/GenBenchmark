@@ -16,7 +16,7 @@ def ingest_to_faiss(json_path=DATASET_PATH,
         dataset = json.load(f)
 
     # Estraiamo tutti i passaggi unici per evitare duplicati nell'indice
-    # Nota: la struttura tipica di HuggingFace per MS MARCO ha 'passages'
+    # Nota: la struttura di HuggingFace per MS MARCO ha 'passages'
     # come dict contenente 'passage_text' e 'is_selected'
     unique_passages = set()
     for row in dataset:
@@ -28,14 +28,14 @@ def ingest_to_faiss(json_path=DATASET_PATH,
     passages_list = list(unique_passages)
     print(f"Trovati {len(passages_list)} passaggi unici. Inizio embedding...")
 
-    # Carichiamo il modello di embedding. Questo scaricherà i pesi la prima volta.
+    # download del modello
     model = SentenceTransformer(model_name)
 
-    # Generiamo gli embeddings (restituisce un array numpy)
+    # Generazione degli embeddings
     embeddings = model.encode(passages_list, show_progress_bar=True)
     embeddings = np.array(embeddings).astype("float32")
 
-    # Creiamo l'indice FAISS (FlatL2 è il più semplice e fa ricerca esatta)
+    # Creiamo l'indicizzazione su FAISS (FlatL2 è il più semplice e fa ricerca esatta)
     dimension = embeddings.shape[1]
     index = faiss.IndexFlatL2(dimension)
     index.add(embeddings)

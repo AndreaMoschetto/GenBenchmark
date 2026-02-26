@@ -22,17 +22,15 @@ class LocalGenerator:
 
         print(f"Caricamento modello da {model_path} su device: {self.device}...")
 
-        # Carichiamo il tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_path,
             local_files_only=True,
         )
 
-        # Carichiamo il modello in float16 per risparmiare memoria (ottimo per M1 e CUDA)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_path,
             device_map=self.device,
-            dtype=torch.float16 if self.device != "cpu" else torch.float32,
+            dtype=torch.float16 if self.device != "cpu" else torch.float32,  # float16 su GPU per risparmiare memoria, float32 su CPU per compatibilità
             local_files_only=True
         )
 
@@ -40,20 +38,18 @@ class LocalGenerator:
 
     def generate_answer(self, query: str, context: str, max_new_tokens: int = 150) -> str:
         """
-        Genera una risposta usando il formato prompt standard del RAG.
+        Genera una risposta usando un formato prompt standard per il RAG.
         """
-        # Creiamo un prompt chiaro e diretto che vincoli il modello al contesto
+
         system_prompt = "You are an expert assistant. Answer the question strictly based on the provided context. If the context does not contain the answer, say 'I don't know'."
         user_prompt = f"CONTEXT:\n{context}\nQUESTION:\n{query}"
-
-        # Usiamo il chat_template se il modello lo supporta (consigliato per modelli Instruct)
+        # chat_template standard per modelli conversazionali
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
 
         try:
-            # Applichiamo il template conversazionale del modello (Llama, Phi, ecc. ne hanno di specifici)
             prompt = self.tokenizer.apply_chat_template(
                 messages,
                 tokenize=False,
@@ -65,7 +61,7 @@ class LocalGenerator:
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
 
-        # Generazione
+        # ----- GENERAZIONE -----
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
@@ -84,8 +80,7 @@ class LocalGenerator:
 
     def cleanup(self):
         """
-        Libera la memoria in modo aggressivo. Fondamentale quando
-        fai i test con più modelli in sequenza sullo stesso Mac.
+        Libera la memoria in modo aggressivo
         """
         print("Liberazione memoria VRAM/RAM...")
         del self.model
