@@ -33,8 +33,7 @@ GENBENCHMARK/
 ├── config.yaml                # Experiment orchestration file
 ├── constants.py               # Global paths definition
 ├── evaluate.py                # Metrics calculation script (ROUGE, BLEU, MRR, Sim)
-├── main.py                    # Main orchestrator (runs everything reading config.yaml)
-└── run-benchmark.sh           # Bash script for job submission on the HPC cluster
+└──  main.py                    # Main orchestrator (runs everything reading config.yaml)
 
 ```
 
