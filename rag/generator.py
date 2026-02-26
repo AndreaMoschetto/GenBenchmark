@@ -12,10 +12,13 @@ class LocalGenerator:
         # Rilevamento automatico dell'hardware
         if torch.cuda.is_available():
             self.device = "cuda"
+            print(f"GPU NVIDIA rilevata: {torch.cuda.get_device_name(0)}")
         elif torch.backends.mps.is_available():
             self.device = "mps"  # Per il tuo Mac M1
+            print("GPU Apple Silicon (M1/M2) rilevata: usando Metal Performance Shaders (MPS)")
         else:
             self.device = "cpu"
+            print("Nessuna GPU rilevata, usando CPU. Le prestazioni saranno limitate.")
 
         print(f"Caricamento modello da {model_path} su device: {self.device}...")
 
