@@ -1,0 +1,35 @@
+name: rag-benchmark
+channels:
+- pytorch
+- conda-forge
+- defaults
+dependencies:
+# --- Core Python ---
+- python=3.10
+
+# --- Machine Learning & Tensori ---
+# Blocchiamo PyTorch alla 2.2.0 per compatibilità con il tuo cluster HPC
+- pytorch=2.2.0
+- numpy
+- pandas
+- scikit-learn
+
+# --- Retrieval ---
+- faiss-cpu # Usa faiss-gpu se vuoi fare retrieval su schede video (ma su CPU per 100k vettori va benissimo)
+
+# --- NLP & Text Processing ---
+- nltk
+
+# --- Utilities ---
+- tqdm
+- pyyaml
+
+# --- Librerie gestite via PIP ---
+- pip:
+  # Blocchiamo transformers alla 4.45.2 per evitare conflitti con PyTorch 2.2.0
+  - transformers==4.45.2
+  - sentence-transformers
+  - accelerate
+  - huggingface-hub
+  - rouge-score
+  - python-dotenv
