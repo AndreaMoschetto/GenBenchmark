@@ -3,22 +3,22 @@
 # ==========================================
 
 pipeline:
-  run_download_dataset: true # Set to true to download and prepare the dataset (only needed the first time)
-  run_download_models: true # Set to true to download listed models (only needed the first time)
+  run_download_dataset: false # Set to true to download and prepare the dataset (only needed the first time)
+  run_download_models: false # Set to true to download listed models (only needed the first time)
   run_benchmark: true # set to generate answers for listed models over all questions
   run_evaluation: true # set to true to compute metrics and generate summary CSV
 
 download:
   models:
-  # - "qwen-2.5-3b"
+  - "qwen-2.5-3b"
   - "llama-3.2-1b"
   # - "phi-3-mini"
   # - "gemma-2-2b"
 
 benchmark:
   models:
-  # - "qwen-2.5-3b"
+  - "qwen-2.5-3b"
   - "llama-3.2-1b"
   # - "phi-3-mini"
   # - "gemma-2-2b"
-  limit: 5 # Set to null tu run on all questions
+  limit: null # Set to null tu run on all questions
