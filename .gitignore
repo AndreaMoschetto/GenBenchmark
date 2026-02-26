@@ -10,3 +10,6 @@ models_cache/
 *.pkl
 *.json
 *.csv
+
+# bash
+*.sh
