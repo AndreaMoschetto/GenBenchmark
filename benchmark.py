@@ -18,7 +18,7 @@ def run_benchmark(models_to_test, limit=None):
         print(f"Esecuzione limitata a {limit} domande per test.")
 
     print("\nInizializzazione del Retriever (FAISS)...")
-    retriever = FaissRetriever(num_docs=7)  # Recuperiamo i top 7 contesti
+    retriever = FaissRetriever(num_docs=5)  # Recuperiamo i top 7 contesti
 
     for model_name in models_to_test:
         model_path = os.path.join(MODELS_DIR, model_name)
