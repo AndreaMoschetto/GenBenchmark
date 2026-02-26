@@ -22,7 +22,7 @@ class LocalGenerator:
         # Carichiamo il tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_path,
-            local_files_only=True
+            local_files_only=True,
         )
 
         # Carichiamo il modello in float16 per risparmiare memoria (ottimo per M1 e CUDA)

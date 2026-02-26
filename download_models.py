@@ -7,7 +7,7 @@ MODELS_ZOO = {
     "llama-3.2-1b": "meta-llama/Llama-3.2-1B-Instruct",
     "phi-3-mini": "microsoft/Phi-3-mini-4k-instruct",
     "gemma-2-2b": "google/gemma-2-2b-it",
-    "ministral-3b": "mistralai/Ministral-3-3B-Instruct-2512"
+    "qwen-2.5-3b": "Qwen/Qwen2.5-3B-Instruct"
 }
 
 TARGET_DIR = "./models_cache"
