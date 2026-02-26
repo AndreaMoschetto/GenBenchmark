@@ -1,9 +1,14 @@
 from datasets import load_dataset
 import json
 from tqdm import tqdm
+import os
+from constants import DATA_PATH, DATASET_PATH
 
 
-def extract_well_formed_subset(output_file="msmarco_v2.1_wellformed.json"):
+def extract_well_formed_subset(output_file=DATASET_PATH):
+    if os.path.exists(output_file):
+        print(f"⚠️ Il file {output_file} esiste già. Se vuoi rigenerarlo, cancellalo manualmente e riesegui questo script.")
+        return
     print("Connessione a Hugging Face per MS MARCO v2.1 (Streaming mode)...")
 
     # Carichiamo il dataset in streaming
@@ -32,10 +37,11 @@ def extract_well_formed_subset(output_file="msmarco_v2.1_wellformed.json"):
             subset.append(clean_record)
 
     # Salvataggio locale
+    os.makedirs(DATA_PATH, exist_ok=True)
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(subset, f, indent=4, ensure_ascii=False)
 
-    print(f"\nEstrazione completata!")
+    print("\nEstrazione completata!")
     print(f"Record totali con risposta ben formata: {len(subset)}")
     print(f"File salvato in: {output_file}")
 

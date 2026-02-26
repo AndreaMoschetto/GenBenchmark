@@ -1,0 +1,7 @@
+DATA_PATH = "./data/"
+DATASET_PATH = f"{DATA_PATH}msmarco_v2.1_wellformed.json"
+INDEX_PATH = f"{DATA_PATH}msmarco.faiss"
+META_PATH = f"{DATA_PATH}passages_meta.pkl"
+MODELS_DIR = "./models_cache"
+RESULTS_DIR = "./results"
+OUTPUT_CSV = "benchmark_summary.csv"

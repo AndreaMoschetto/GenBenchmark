@@ -1,12 +1,13 @@
 import faiss
 import pickle
 from sentence_transformers import SentenceTransformer
+from constants import INDEX_PATH, META_PATH
 
 
 class FaissRetriever:
     def __init__(self,
-                 index_path="msmarco.faiss",
-                 meta_path="passages_meta.pkl",
+                 index_path=INDEX_PATH,
+                 meta_path=META_PATH,
                  model_name="all-MiniLM-L6-v2",
                  num_docs: int = 5):
 

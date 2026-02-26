@@ -1,10 +1,15 @@
 import yaml
 import argparse
 import sys
-
-from download_models import download_models
+import os
+from dotenv import load_dotenv
+from utils.download_dataset import extract_well_formed_subset
+from utils.download_models import download_models
 from benchmark import run_benchmark
 from evaluate import evaluate_models
+from constants import RESULTS_DIR, OUTPUT_CSV
+
+load_dotenv()
 
 
 def load_config(config_path):
@@ -25,13 +30,21 @@ def main():
     config = load_config(args.config)
     pipeline_steps = config.get("pipeline", {})
 
-    # 1. DOWNLOAD
-    if pipeline_steps.get("run_download", False):
+    if pipeline_steps.get("run_download_dataset", False):
+        print("\n" + "=" * 40)
+        print("📥 FASE 0: DOWNLOAD DATASET")
+        print("=" * 40)
+        extract_well_formed_subset()
+    else:
+        print("\n⏭️ Salto fase di download del dataset.")
+    # 1. DOWNLOAD MODELS
+    if pipeline_steps.get("run_download_models", False):
         print("\n" + "=" * 40)
         print("📥 FASE 1: DOWNLOAD MODELLI")
         print("=" * 40)
         dl_cfg = config.get("download", {})
-        download_models(dl_cfg.get("models", []), dl_cfg.get("token"))
+        hf_token = os.getenv("HF_TOKEN")
+        download_models(dl_cfg.get("models", []), hf_token)
     else:
         print("\n⏭️ Salto fase di download.")
 
@@ -50,8 +63,7 @@ def main():
         print("\n" + "=" * 40)
         print("📊 FASE 3: VALUTAZIONE METRICHE")
         print("=" * 40)
-        eval_cfg = config.get("evaluation", {})
-        evaluate_models(eval_cfg.get("results_dir", "results"), eval_cfg.get("output_csv", "benchmark_summary.csv"))
+        evaluate_models(RESULTS_DIR, OUTPUT_CSV)
     else:
         print("\n⏭️ Salto fase di valutazione.")
 

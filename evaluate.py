@@ -9,6 +9,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
 from tqdm import tqdm
+from constants import RESULTS_DIR
 
 # Ignoriamo i warning di NLTK se le frasi sono troppo corte per i 4-grammi
 warnings.filterwarnings("ignore")
@@ -96,7 +97,7 @@ class RAGEvaluator:
         return 0.0
 
 
-def evaluate_models(results_dir="results", output_csv="benchmark_summary.csv"):
+def evaluate_models(results_dir=RESULTS_DIR, output_csv="benchmark_summary.csv"):
     evaluator = RAGEvaluator()
     summary_data = []
 

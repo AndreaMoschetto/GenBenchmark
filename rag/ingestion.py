@@ -3,11 +3,12 @@ import faiss
 import pickle
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from constants import INDEX_PATH, META_PATH, DATASET_PATH
 
 
-def ingest_to_faiss(json_path="msmarco_v2.1_wellformed.json",
-                    index_out="msmarco.faiss",
-                    meta_out="passages_meta.pkl",
+def ingest_to_faiss(json_path=DATASET_PATH,
+                    index_out=INDEX_PATH,
+                    meta_out=META_PATH,
                     model_name="all-MiniLM-L6-v2"):
 
     print(f"Caricamento dati da {json_path}...")

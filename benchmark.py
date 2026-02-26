@@ -3,12 +3,9 @@ import json
 import argparse
 from tqdm import tqdm
 
-from retriever import FaissRetriever
-from generator import LocalGenerator
-
-TARGET_DIR = "./models_cache"
-DATASET_PATH = "msmarco_v2.1_wellformed.json"
-RESULTS_DIR = "./results"
+from rag.retriever import FaissRetriever
+from rag.generator import LocalGenerator
+from constants import DATASET_PATH, RESULTS_DIR, MODELS_DIR
 
 
 def run_benchmark(models_to_test, limit=None):
@@ -24,7 +21,7 @@ def run_benchmark(models_to_test, limit=None):
     retriever = FaissRetriever(num_docs=7)  # Recuperiamo i top 7 contesti
 
     for model_name in models_to_test:
-        model_path = os.path.join(TARGET_DIR, model_name)
+        model_path = os.path.join(MODELS_DIR, model_name)
 
         # Saltiamo se il modello non è stato scaricato
         if not os.path.exists(model_path) or not os.listdir(model_path):
