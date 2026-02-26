@@ -8,6 +8,7 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
+from tqdm import tqdm
 
 # Ignoriamo i warning di NLTK se le frasi sono troppo corte per i 4-grammi
 warnings.filterwarnings("ignore")
@@ -16,77 +17,112 @@ warnings.filterwarnings("ignore")
 class RAGEvaluator:
     def __init__(self, embedding_model="all-MiniLM-L6-v2"):
         print("Inizializzazione degli strumenti di valutazione...")
-        # Inizializziamo ROUGE (usiamo ROUGE-L come nel paper di MS MARCO)
         self.scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
 
-        # Inizializziamo il modello per la Semantic Similarity
         print(f"Caricamento modello embedding per la similarità: {embedding_model}")
         self.similarity_model = SentenceTransformer(embedding_model)
-
-        # Funzione di smoothing per BLEU (evita punteggi a 0 se mancano n-grammi superiori)
         self.smoother = SmoothingFunction().method1
 
-    def calculate_metrics(self, generated: str, references: list) -> dict:
+    def calculate_text_metrics(self, generated: str, references: list) -> dict:
         """
         Calcola ROUGE, BLEU e Cosine Similarity.
-        Accetta una lista di reference (es. well_formed_answer + original_answers)
-        e restituisce il punteggio massimo ottenuto tra tutte le reference.
+        Restituisce il punteggio massimo ottenuto tra tutte le referenze passate.
         """
         if not generated or not references:
-            return {"rougeL_fmeasure": 0.0, "bleu": 0.0, "semantic_similarity": 0.0}
+            return {"rougeL": 0.0, "bleu": 0.0, "similarity": 0.0}
 
         best_rouge = 0.0
         best_bleu = 0.0
         best_sim = 0.0
 
-        # Embedding della risposta generata
         gen_emb = self.similarity_model.encode([generated])
 
         for ref in references:
             if not ref:
                 continue
 
-            # 1. ROUGE-L
-            rouge_scores = self.scorer.score(ref, generated)
-            f_measure = rouge_scores['rougeL'].fmeasure
+            # ROUGE-L
+            f_measure = self.scorer.score(ref, generated)['rougeL'].fmeasure
             if f_measure > best_rouge:
                 best_rouge = f_measure
 
-            # 2. BLEU
+            # BLEU
             ref_tokens = ref.split()
             gen_tokens = generated.split()
             bleu_score = sentence_bleu([ref_tokens], gen_tokens, smoothing_function=self.smoother)
             if bleu_score > best_bleu:
                 best_bleu = bleu_score
 
-            # 3. Semantic Similarity (Cosine)
+            # Similarità Semantica
             ref_emb = self.similarity_model.encode([ref])
-            sim_score = cosine_similarity(gen_emb, ref_emb)[0][0]
+            sim_score = float(cosine_similarity(gen_emb, ref_emb)[0][0])
             if sim_score > best_sim:
-                best_sim = float(sim_score)
+                best_sim = sim_score
 
         return {
-            "rougeL_fmeasure": best_rouge,
+            "rougeL": best_rouge,
             "bleu": best_bleu,
-            "semantic_similarity": best_sim
+            "similarity": best_sim
         }
+
+    def calculate_mrr(self, retrieved_texts: list, source_passages: dict) -> float:
+        """
+        Calcola il Mean Reciprocal Rank (MRR).
+        Verifica a quale indice della lista recuperata si trova il primo testo marcato come is_selected=1.
+        """
+        if not source_passages or not retrieved_texts:
+            return 0.0
+
+        # Estraiamo i testi dei passaggi considerati rilevanti dalla Ground Truth
+        relevant_texts = []
+        try:
+            is_selected_list = source_passages.get("is_selected", [])
+            passage_texts = source_passages.get("passage_text", [])
+            for text, sel in zip(passage_texts, is_selected_list):
+                if sel == 1:
+                    relevant_texts.append(text)
+        except Exception:
+            pass
+
+        if not relevant_texts:
+            return 0.0
+
+        # Controllo della posizione
+        for index, ret_text in enumerate(retrieved_texts):
+            # Usiamo un controllo in/contains per essere flessibili rispetto a piccoli spazi o artefatti di formattazione
+            if any(rel_text.strip() in ret_text.strip() or ret_text.strip() in rel_text.strip() for rel_text in relevant_texts):
+                return 1.0 / (index + 1)
+
+        return 0.0
 
 
 def evaluate_models(results_dir="results", output_csv="benchmark_summary.csv"):
     evaluator = RAGEvaluator()
     summary_data = []
 
-    # Controllo che la cartella esista
     if not os.path.exists(results_dir):
         print(f"❌ Errore: La cartella '{results_dir}' non esiste. Assicurati di aver generato i file.")
         return
 
-    # Cerchiamo tutti i file generati dal benchmark nella cartella specificata
     json_files = [f for f in os.listdir(results_dir) if f.startswith("results_") and f.endswith(".json")]
 
     if not json_files:
         print(f"⚠️ Nessun file di risultati trovato nella cartella '{results_dir}'. Esegui prima benchmark.py.")
         return
+
+    print("\n🔍 Calcolo del MRR globale (Metrica del Retriever)...")
+    global_mrr = 0.0
+    with open(os.path.join(results_dir, json_files[0]), "r", encoding="utf-8") as f:
+        first_model_data = json.load(f)
+
+    mrr_scores = []
+    for row in first_model_data:
+        retrieved = row.get("retrieved_texts", [])
+        mrr_score = evaluator.calculate_mrr(retrieved, row.get("source_passages", {}))
+        mrr_scores.append(mrr_score)
+
+    global_mrr = np.mean(mrr_scores)
+    print(f"🎯 MRR Globale (costante per tutti i modelli): {global_mrr:.4f}")
 
     for file_name in json_files:
         model_name = file_name.replace("results_", "").replace(".json", "")
@@ -95,36 +131,44 @@ def evaluate_models(results_dir="results", output_csv="benchmark_summary.csv"):
         with open(os.path.join(results_dir, file_name), "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        model_metrics = {"rougeL": [], "bleu": [], "similarity": []}
+        # Strutture dati separate per Well Formed, Original Answers e MRR
+        metrics = {
+            "wf_rouge": [], "wf_bleu": [], "wf_sim": [],
+            "orig_rouge": [], "orig_bleu": [], "orig_sim": []
+        }
 
-        for row in data:
+        for row in tqdm(data, desc=f"Processing {file_name}"):
             generated = row.get("generated_answer", "")
 
-            # Costruiamo la lista delle reference GT
-            references = []
-            if row.get("well_formed_answer"):
-                references.append(row["well_formed_answer"])
-            if row.get("original_answers"):
-                references.extend(row["original_answers"])
+            # 1. Valutazione rispetto a Well Formed Answer
+            wf_refs = [row.get("well_formed_answer")] if row.get("well_formed_answer") else []
+            wf_scores = evaluator.calculate_text_metrics(generated, wf_refs)
+            metrics["wf_rouge"].append(wf_scores["rougeL"])
+            metrics["wf_bleu"].append(wf_scores["bleu"])
+            metrics["wf_sim"].append(wf_scores["similarity"])
 
-            # Se il modello ha risposto "I don't know" ma una risposta c'era, le metriche saranno basse
-            scores = evaluator.calculate_metrics(generated, references)
+            # 2. Valutazione rispetto a Original Answers
+            orig_refs = row.get("original_answers", [])
+            orig_scores = evaluator.calculate_text_metrics(generated, orig_refs)
+            metrics["orig_rouge"].append(orig_scores["rougeL"])
+            metrics["orig_bleu"].append(orig_scores["bleu"])
+            metrics["orig_sim"].append(orig_scores["similarity"])
 
-            model_metrics["rougeL"].append(scores["rougeL_fmeasure"])
-            model_metrics["bleu"].append(scores["bleu"])
-            model_metrics["similarity"].append(scores["semantic_similarity"])
-
-        # Aggreghiamo i risultati medi per il modello
+        # Aggregazione finale delle medie
         summary_data.append({
             "Model": model_name,
-            "ROUGE-L (Mean)": np.mean(model_metrics["rougeL"]),
-            "BLEU (Mean)": np.mean(model_metrics["bleu"]),
-            "Semantic Similarity (Mean)": np.mean(model_metrics["similarity"])
+            "Retrieval_MRR": global_mrr,  # MRR è costante per tutti i modelli in questo setup
+            "WF_ROUGE-L": np.mean(metrics["wf_rouge"]),
+            "WF_BLEU": np.mean(metrics["wf_bleu"]),
+            "WF_Similarity": np.mean(metrics["wf_sim"]),
+            "Orig_ROUGE-L": np.mean(metrics["orig_rouge"]),
+            "Orig_BLEU": np.mean(metrics["orig_bleu"]),
+            "Orig_Similarity": np.mean(metrics["orig_sim"])
         })
 
         print(f"✅ {model_name} valutato.")
 
-    # Creiamo un DataFrame e salviamo i risultati
+    # Creiamo un DataFrame e salviamo
     df = pd.DataFrame(summary_data)
     df.to_csv(output_csv, index=False)
 
@@ -135,7 +179,6 @@ def evaluate_models(results_dir="results", output_csv="benchmark_summary.csv"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Calcola le metriche di valutazione sui risultati del benchmark.")
-    # Default aggiornato a "results"
     parser.add_argument("--dir", type=str, default="results", help="Cartella contenente i file results_*.json")
     parser.add_argument("--output", type=str, default="benchmark_summary.csv", help="Nome del file CSV di output")
     args = parser.parse_args()

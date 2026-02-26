@@ -21,7 +21,7 @@ def run_benchmark(models_to_test, limit=None):
         print(f"Esecuzione limitata a {limit} domande per test.")
 
     print("\nInizializzazione del Retriever (FAISS)...")
-    retriever = FaissRetriever(num_docs=3)  # Recuperiamo i top 3 contesti
+    retriever = FaissRetriever(num_docs=7)  # Recuperiamo i top 7 contesti
 
     for model_name in models_to_test:
         model_path = os.path.join(TARGET_DIR, model_name)
@@ -51,6 +51,9 @@ def run_benchmark(models_to_test, limit=None):
             # 1. Recupero del contesto
             context = retriever.get_context(query)
 
+            # Splittiamo il contesto unico in una lista di testi per agevolare l'MRR
+            retrieved_texts = context.split("\n\n---\n\n") if context else []
+
             # 2. Generazione della risposta
             generated_answer = generator.generate_answer(query, context)
 
@@ -62,6 +65,8 @@ def run_benchmark(models_to_test, limit=None):
                 "well_formed_answer": ground_truth,
                 "generated_answer": generated_answer,
                 "retrieved_context": context,
+                "retrieved_texts": retrieved_texts,          # Aggiunto per MRR
+                "source_passages": row.get("passages", {}),  # Aggiunto per MRR (contiene is_selected)
                 "query_type": row.get("query_type", "unknown")
             })
 
