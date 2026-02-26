@@ -13,3 +13,6 @@ models_cache/
 
 # bash
 *.sh
+
+# env
+.env
