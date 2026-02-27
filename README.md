@@ -1,4 +1,4 @@
-****# 🚀 GenBenchmark: A RAG Benchmark Pipeline over Generation Models
+# 🚀 GenBenchmark: A RAG Benchmark Pipeline over Generation Models
 
 ## 🎯 Project Purpose
 This project implements a complete pipeline to evaluate the performance of various Large Language Models (LLMs) within a **RAG (Retrieval-Augmented Generation)** architecture. 
