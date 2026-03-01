@@ -16,3 +16,6 @@ models_cache/
 
 # env
 .env
+
+# mac
+*.DS_Store
