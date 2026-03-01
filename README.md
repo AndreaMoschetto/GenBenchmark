@@ -160,14 +160,24 @@ The retrieval phase is model-agnostic and relies on the `all-MiniLM-L6-v2` embed
 
 ### Generative Models Performance
 
-The following table presents the metrics for the generated answers, evaluated against both the *Well-Formed (WF)* answers and the *Original (Orig)* answers provided by the MS MARCO dataset.
+The following table presents the metrics for the generated answers, evaluated against both the *WellFormedAnswer* fields and the *Answer* fields provided by the MS MARCO dataset.
 
-| Model | WF ROUGE-L | WF BLEU | WF Similarity | Orig ROUGE-L | Orig BLEU | Orig Similarity |
-| --- | --- | --- | --- | --- | --- | --- |
-| **Qwen-2.5-3b** | 0.3452 | 0.1166 | **0.8031** | 0.2340 | 0.0675 | 0.5338 |
-| **Phi-3-mini** | **0.3747** | **0.1485** | 0.7409 | 0.2515 | 0.0779 | 0.5062 |
-| **Gemma-2-2b** | 0.3452 | 0.1283 | 0.6315 | **0.3855** | **0.1589** | **0.5930** |
-| **Llama-3.2-1b** | 0.3413 | 0.1224 | 0.6389 | 0.2310 | 0.0703 | 0.4510 |
+Field: **Answer**
+| Model | ROUGE-L | BLEU | Semantic Similarity |
+| --- | --- | --- | --- |
+| **Qwen-2.5-3b** | 0.2340 | 0.0675 | 0.5338 |
+| **Phi-3-mini** | 0.2515 | 0.0779 | 0.5062 |
+| **Gemma-2-2b** | **0.3855** | **0.1589** | **0.5930** |
+| **Llama-3.2-1b** | 0.2310 | 0.0703 | 0.4510 |
+
+Field: **WellFormedAnswer**
+| Model | ROUGE-L | BLEU | Semantic Similarity |
+ --- | --- | --- | --- |
+| **Qwen-2.5-3b** | 0.3452 | 0.1166 | **0.8031** |
+| **Phi-3-mini** | **0.3747** | **0.1485** | 0.7409 |
+| **Gemma-2-2b** | 0.3452 | 0.1283 | 0.6315 |
+| **Llama-3.2-1b** | 0.3413 | 0.1224 | 0.6389 |
+
 
 ### Insights and Interpretations
 
