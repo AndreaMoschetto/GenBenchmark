@@ -158,11 +158,16 @@ The retrieval phase is model-agnostic and relies on the `all-MiniLM-L6-v2` embed
 * **Global MRR (Mean Reciprocal Rank): `0.5407`**
 * *Interpretation:* An MRR of ~0.54 indicates that, on average, the correct supporting passage (annotated as `is_selected: 1` in the MS MARCO dataset) is positioned between rank 1 and rank 2 in the retrieved context. This demonstrates a highly effective retrieval component, ensuring the generative models receive high-quality grounding information.
 
+
 ### Generative Models Performance
 
-The following table presents the metrics for the generated answers, evaluated against both the *WellFormedAnswer* fields and the *Answer* fields provided by the MS MARCO dataset.
+To deeply understand the impact of context size and model alignment, the benchmark was run under two different configurations. We evaluated the generated answers against both the *WellFormedAnswer* (full declarative sentences) and the *Answer* (short, extractive entities) fields provided by the MS MARCO dataset.
 
-Field: **Answer**
+#### Configuration 1: Baseline (k=5, Standard Prompt)
+
+In this baseline run, the retriever fetched the top 5 passages. The models were given a standard conversational prompt without strict formatting constraints.
+
+Field: **Answer** (Original)
 | Model | ROUGE-L | BLEU | Semantic Similarity |
 | --- | --- | --- | --- |
 | **Qwen-2.5-3b** | 0.2340 | 0.0675 | 0.5338 |
@@ -172,11 +177,38 @@ Field: **Answer**
 
 Field: **WellFormedAnswer**
 | Model | ROUGE-L | BLEU | Semantic Similarity |
- --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | **Qwen-2.5-3b** | 0.3452 | 0.1166 | **0.8031** |
 | **Phi-3-mini** | **0.3747** | **0.1485** | 0.7409 |
 | **Gemma-2-2b** | 0.3452 | 0.1283 | 0.6315 |
 | **Llama-3.2-1b** | 0.3413 | 0.1224 | 0.6389 |
+
+#### Configuration 2: Strict Alignment (k=3, Strict WF System Prompt)
+
+In this optimized run, we reduced the context window to the top 3 passages to minimize text noise. Furthermore, we applied a strict System Prompt forcing the models to output a single, well-formed declarative sentence without markdown formatting or conversational fillers.
+
+Field: **Answer** (Original)
+| Model | ROUGE-L | BLEU | Semantic Similarity |
+| --- | --- | --- | --- |
+| **Qwen-2.5-3b** | 0.2291 | 0.0463 | 0.5254 |
+| **Phi-3-mini** | 0.2882 | 0.0768 | 0.5401 |
+| **Gemma-2-2b** | **0.3338** | **0.1422** | **0.5451** |
+| **Llama-3.2-1b** | 0.2930 | 0.0828 | 0.5369 |
+
+Field: **WellFormedAnswer**
+| Model | ROUGE-L | BLEU | Semantic Similarity |
+| --- | --- | --- | --- |
+| **Qwen-2.5-3b** | 0.3534 | 0.0854 | 0.8085 |
+| **Phi-3-mini** | 0.4649 | 0.1675 | **0.8340** |
+| **Gemma-2-2b** | **0.4986** | **0.2248** | 0.8134 |
+| **Llama-3.2-1b** | 0.4494 | 0.1548 | 0.8000 |
+
+### Insights and Interpretations
+
+1. **The Power of Prompt Alignment:** The introduction of the strict System Prompt in Configuration 2 drastically improved the lexical scores for the *WellFormedAnswer* target. Gemma-2-2b's ROUGE-L jumped from 0.3452 to 0.4986, and its BLEU score nearly doubled. This proves that modern LLMs possess the correct knowledge but are heavily penalized by legacy n-gram metrics if their output format (e.g., bullet points or verbosity) is not strictly aligned with the dataset's expectations.
+2. **Semantic Understanding Leap:** By reducing the context noise ($k$ from 5 to 3) and enforcing a declarative structure, the Semantic Similarity for almost all models skyrocketed, crossing the 0.80 threshold. Phi-3-mini reached an impressive 0.8340, indicating near-perfect conceptual alignment with the Ground Truth.
+3. **The Format Trade-off:** As expected, while the *WellFormedAnswer* metrics surged in Configuration 2, the scores for the short, extractive *Answer* field slightly declined. Because the prompt forces a full sentence, the models trigger a "brevity penalty" mismatch against the single-word original MS MARCO answers. This highlights a crucial academic finding: lexical metrics (ROUGE/BLEU) in RAG evaluation are highly sensitive to format constraints rather than pure factual correctness.
+4. **Retrieval MRR Context:** Reducing $k$ from 5 to 3 caused a slight drop in the Retriever's MRR (from ~0.54 to ~0.51), meaning a few relevant documents were lost. However, the generative metrics improved dramatically, demonstrating that for smaller LLMs (1B-3B parameters), a smaller, cleaner context window is highly preferable to a larger, noisier one.
 
 
 ### Insights and Interpretations
