@@ -187,14 +187,6 @@ Field: **WellFormedAnswer**
 
 In this optimized run, we reduced the context window to the top 3 passages to minimize text noise. Furthermore, we applied a strict System Prompt forcing the models to output a single, well-formed declarative sentence without markdown formatting or conversational fillers.
 
-Field: **Answer** (Original)
-| Model | ROUGE-L | BLEU | Semantic Similarity |
-| --- | --- | --- | --- |
-| **Qwen-2.5-3b** | 0.2291 | 0.0463 | 0.5254 |
-| **Phi-3-mini** | 0.2882 | 0.0768 | 0.5401 |
-| **Gemma-2-2b** | **0.3338** | **0.1422** | **0.5451** |
-| **Llama-3.2-1b** | 0.2930 | 0.0828 | 0.5369 |
-
 Field: **WellFormedAnswer**
 | Model | ROUGE-L | BLEU | Semantic Similarity |
 | --- | --- | --- | --- |
